@@ -1,44 +1,44 @@
 package org.usfirst.frc.team3291.robot;
 
-
-import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.RobotDrive.MotorType;
-import edu.wpi.first.wpilibj.smartdashboard.*;
+import edu.wpi.first.wpilibj.SampleRobot;
+import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+//Ultrasonic Sensor. testing time
 
-/**
- * This is a demo program showing the use of the RobotDrive class. The
- * SampleRobot class is the base of a robot application that will automatically
- * call your Autonomous and OperatorControl methods at the right time as
- * controlled by the switches on the driver station or the field controls.
- *
- * The VM is configured to automatically run this class, and to call the
- * functions corresponding to each mode, as described in the SampleRobot
- * documentation. If you change the name of this class or the package after
- * creating this project, you must also update the manifest file in the resource
- * directory.
- *
- * WARNING: While it may look like a good choice to use for your code if you're
- * inexperienced, don't. Unless you know what you are doing, complex code will
- * be much more difficult under this system. Use IterativeRobot or Command-Based
- * instead if you're new.
- */
 public class Robot extends SampleRobot {
-	RobotDrive myRobot = new RobotDrive(0, 1, 2, 3);
+	RobotDrive myRobot = new RobotDrive(3, 2, 1, 0);
 	Joystick stick = new Joystick(0);
 	final String defaultAuto = "Default";
 	final String customAuto = "My Auto";
 	SendableChooser<String> chooser = new SendableChooser<>();
 
+	
 	public Robot() {
 		myRobot.setExpiration(0.1);
-		myRobot.setInvertedMotor(MotorType.kFrontLeft, true);
-		myRobot.setInvertedMotor(MotorType.kFrontRight, true);
-		myRobot.setInvertedMotor(MotorType.kRearRight, true);
-		myRobot.setInvertedMotor(MotorType.kRearLeft, true);
 	}
 
 	@Override
 	public void robotInit() {
+		myRobot.setInvertedMotor(MotorType.kFrontRight, true);
+		myRobot.setInvertedMotor(MotorType.kFrontLeft, true);
+		myRobot.setInvertedMotor(MotorType.kRearRight, true);
+		myRobot.setInvertedMotor(MotorType.kRearLeft, true);
+		//AnalogInput input = new AnalogInput(3);
+				//input.setOversampleBits(4);
+				//int bits = input.getOversampleBits();
+				//int raw = input.getValue();
+		//double volts = input.getVoltage();
+				//int averageRaw = input.getAverageValue();
+				//double averageVolts = input.getAverageVoltage();
+		//System.out.println(volts);
+				//input.setAverageBits(2);
+				//bits = input.getAverageBits();
+				//AnalogInput.setGlobalSampleRate(62500);
+		    	//ultra = new Ultrasonic(Ultrasonic.kAnalogInputChannels, Ultrasonic.kAnalogOutputChannels);
 		chooser.addDefault("Default Auto", defaultAuto);
 		chooser.addObject("My Auto", customAuto);
 		SmartDashboard.putData("Auto modes", chooser);
@@ -57,10 +57,14 @@ public class Robot extends SampleRobot {
 	 */
 	@Override
 	public void autonomous() {
+		myRobot.setSafetyEnabled(false);
 		String autoSelected = chooser.getSelected();
 		// String autoSelected = SmartDashboard.getString("Auto Selector",
 		// defaultAuto);
 		System.out.println("Auto selected: " + autoSelected);
+		AnalogInput input = new AnalogInput(3);
+		double volts = input.getVoltage();
+		double distance = (volts/(5/1024))*5; //((5/1024)*1000)
 
 		switch (autoSelected) {
 		case customAuto:
@@ -72,14 +76,24 @@ public class Robot extends SampleRobot {
 		case defaultAuto:
 		default:
 			myRobot.setSafetyEnabled(false);
-			myRobot.drive(-0.5, 0);
-			Timer.delay(3);
+			/*myRobot.drive(-0.5, 0.0);
+			Timer.delay(1.89);
 			myRobot.drive(-0.5, 1.0);
-			Timer.delay(1);
-			myRobot.drive(-0.5, 0);
-			Timer.delay(1.5);
-			myRobot.drive(0.0, 0.0);
-			break;
+			Timer.delay(1.73); //110 degrees, need 120
+			myRobot.drive(-0.5, 0.0);
+			Timer.delay(0.405);*/
+			//myRobot.drive(0.0, 0.0);
+			boolean respawn=false;
+			while(!respawn){
+				if(distance > 40){
+					myRobot.drive(-0.5, 0);
+					Timer.delay(0.5);
+				}else if (distance < 30){
+					myRobot.drive(0.0, 0);
+					Timer.delay(2);
+				}
+			}
+			
 		}
 	}
 
@@ -89,9 +103,10 @@ public class Robot extends SampleRobot {
 	@Override
 	public void operatorControl() {
 		myRobot.setSafetyEnabled(true);
+		
 		while (isOperatorControl() && isEnabled()) {
 			myRobot.arcadeDrive(stick); // drive with arcade style (use right
-								// stick)
+										// stick)
 			Timer.delay(0.005); // wait for a motor update time
 		}
 	}
